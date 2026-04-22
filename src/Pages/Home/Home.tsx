@@ -1,7 +1,7 @@
 import "./Home.scss";
 import juImg from "@/assets/juTokenIcon.png";
 import usdtImg from "@/assets/usdtTokenIcon.png"
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 
 import {getContracts} from "@/Util/Util.ts";
 import {ethers} from "ethers";
@@ -35,6 +35,10 @@ function Home() {
     const [sellAmount, setSellAmount] = useState<string>("");
     // 购买代币数量
     const [buyAmount, setBuyAmount] = useState<string>("");
+    // 过渡出售代币数量
+    const [transitionSellAmount, setTransitionSellAmount] = useState<string>("");
+    // 过渡购买代币数量
+    const [transitionBuyAmount, setTransitionBuyAmount] = useState<string>("");
     // 监听购买数量
     const watchSellAmount = useRef<bigint>(0n);
     // 监听出售数量
@@ -43,6 +47,10 @@ function Home() {
     const [poolType, setPoolType] = useState<number>(1);
     // 滑点上限
     const [slippage, setSlippage] = useState("0.5");
+    // 出售数量防抖
+    const sellRefTime =  useRef<NodeJS.Timeout | null>(null);
+    // 购买数量防抖
+    const buyRefTime = useRef<NodeJS.Timeout | null>(null);
 
     // 测试
     const testAction = async ()=>{
@@ -53,14 +61,54 @@ function Home() {
     // 获取输入出售值
     const captureSellAmount = (value:string)=>{
         setSellAmount(value);
-        watchSellAmount.current = ethers.parseUnits(value,sellToken.decimals);
+        setTransitionSellAmount(value);
+        if(value && Number(value) > 0) {
+            watchSellAmount.current = ethers.parseUnits(value,sellToken.decimals);
+        }
     }
 
     // 获取输入购买值
     const captureBuyAmount = (value:string)=>{
         setBuyAmount(value);
-        watchBuyAmount.current = ethers.parseUnits(value,buyToken.decimals);
+        setTransitionBuyAmount(value);
+        if(value && Number(value) > 0) {
+            watchBuyAmount.current = ethers.parseUnits(value,buyToken.decimals);
+        }
     }
+
+    useEffect(()=>{
+        if(sellRefTime.current) {
+            clearTimeout(sellRefTime.current);
+        }
+        const countAction = ()=>{
+            if(transitionSellAmount && Number(transitionSellAmount) > 0) {
+
+            }else{
+                setBuyAmount("");
+                watchBuyAmount.current = 0n;
+            }
+        }
+        sellRefTime.current = setTimeout(()=>{
+            countAction();
+        },800);
+    },[transitionSellAmount,sellToken.name,buyToken.name])
+
+    useEffect(()=>{
+        if(buyRefTime.current) {
+            clearTimeout(buyRefTime.current);
+        }
+        const countAction = ()=>{
+            if(transitionBuyAmount && Number(transitionBuyAmount) > 0) {
+
+            }else{
+                setSellAmount("");
+                watchSellAmount.current = 0n;
+            }
+        }
+        buyRefTime.current = setTimeout(()=>{
+            countAction();
+        },800);
+    },[transitionBuyAmount,sellToken.name,buyToken.name])
 
     return (
         <div className="homePgae columnCenter">
