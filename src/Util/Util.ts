@@ -65,12 +65,6 @@ const connectWallert = async ()=> {
             return "";
         }
     }
-
-    // 监听是否切换了链
-    window.ethereum.on("chainChanged", () => {
-        window.location.reload();
-    });
-
     if (accounts.length > 0) {
         try {
             const normalizedChainId = String(currentChainId).toLowerCase();
@@ -78,12 +72,11 @@ const connectWallert = async ()=> {
                 // 已经在BNB链或JU链
                 return accounts[0]
             }else{
-                // // 尝试切换到BNB
+                // 尝试切换到BNB
                 await ethereum.request({
                     method: 'wallet_switchEthereumChain',
                     params: [{ chainId: JU_PARAMS.chainId }]
                 });
-                window.location.reload();
                 return accounts[0];
             }
         } catch (error: any) {

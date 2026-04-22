@@ -1,0 +1,78 @@
+.chainControlBox{
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 999;
+  background: rgba(0,0,0,0.5);
+  padding: 0 20px;
+  >.alignBox{
+    width: 100%;
+    >.inBox{
+      width: 100%;
+      max-width: 400px;
+      background: #1F2024;
+      border-radius: 10px;
+      padding: 20px;
+      >.titleAndClose{
+        height: 30px;
+        position: relative;
+        >.title{
+          text-align: center;
+          height: 30px;
+          font-weight: bold;
+          font-size: 15px;
+          color: #FFFFFF;
+        }
+        >.close{
+          width: 30px;
+          height: 30px;
+          background: url("@/assets/closeIcon.png") no-repeat center center / 30px;
+          position: absolute;
+          right: 0;
+          top: 0;
+          cursor: pointer;
+        }
+      }
+      >.item{
+        margin-top: 10px;
+        border: 1px solid #FFFFFF;
+        padding: 10px;
+        border-radius: 10px;
+        position: relative;
+        >.icon{
+          width: 30px;
+          height: 30px;
+          >img{
+            width: 30px;
+            height: 30px;
+          }
+        }
+        >.name{
+          margin-left: 15px;
+          color: #FFFFFF;
+        }
+        >.select{
+          width: 30px;
+          height: 30px;
+          background: url("@/assets/chainSelect.png") no-repeat center center / 25px;
+          position: absolute;
+          right: 20px;
+          top: 50%;
+          margin-top: -15px;
+          cursor: pointer;
+        }
+        >.login{
+          width: 30px;
+          height: 30px;
+          position: absolute;
+          right: 20px;
+          top: 50%;
+          margin-top: -15px;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}

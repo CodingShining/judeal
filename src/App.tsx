@@ -9,6 +9,7 @@ import juChainIcon from "@/assets/juTokenIcon.png";
 import bnbChainIcon from "@/assets/bnbTokenIcon.png";
 
 import RouterView from "@/Router/Router.tsx";
+import ChainControlPage from "@/Components/ChainControl/ChainControl.tsx";
 import {useEffect, useState} from "react";
 import {connectWallert, formatWallertAddress} from "@/Util/Util.ts";
 
@@ -31,8 +32,12 @@ function App() {
 
     // 链信息图片
     const [chainImg, setChainImg] = useState<string>(juChainIcon);
+
     // 链信息名称
     const [chainName, setChainName] = useState<string>("JuChain");
+
+    // 是否显示链切换
+    const [showChangeChain, setShowChangeChain] = useState(false);
 
     // 是否显示移动端菜单
     const [shwoMobileMenu, setShwoMobileMenu] = useState<boolean>(false)
@@ -57,6 +62,12 @@ function App() {
             setChainImg(chainInfo.icon);
             setChainName(chainInfo.name);
         }
+    }
+
+    // 切换链成功后
+    const changeChainInfo = ()=>{
+        setShowChangeChain(false);
+        getCurrChainInfo()
     }
 
     useEffect(()=>{
@@ -95,7 +106,7 @@ function App() {
                   <div className="langAndConnect flexStart">
                       <div className="lan"></div>
                       <div className="wallert columnCenter"><span className="columnCenter">{userWallert ? formatWallertAddress(userWallert) : '链接钱包'}</span></div>
-                      <div className="chainBox flexStart">
+                      <div className="chainBox flexStart" onClick={()=>{setShowChangeChain(true)}}>
                           <div className="icon columnCenter">
                               <img src={chainImg} alt="" />
                           </div>
@@ -117,6 +128,12 @@ function App() {
                   </div>
               </Drawer>
           </div>
+          {
+              showChangeChain ?
+                  <ChainControlPage onClose={()=>{changeChainInfo()}} />
+              :
+                  null
+          }
       </div>
   )
 }
