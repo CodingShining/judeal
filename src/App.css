@@ -8,6 +8,11 @@
     max-width: 1200px;
     height: 100%;
     padding-top: 20px;
+    >.floatMenu{
+      width: 30px;
+      height: 30px;
+      background: url("@/assets/menuIcon.png") no-repeat center center / 25px;
+    }
     >.menuBox{
       width: 100%;
       >.logoAndMenu{
@@ -36,13 +41,113 @@
           margin-left: 20px;
           >span{
             padding: 0 20px 0 40px;
-            height: 25px;
-            border-radius: 25px;
+            height: 30px;
+            border-radius: 30px;
             background: #FFFFFF url("@/assets/wallertIcon.png") no-repeat left 10px center / 20px;
             color: #06060B;
           }
         }
+        >.chainBox{
+          margin-left: 20px;
+          padding: 0 30px 0 10px;
+          background: #FFFFFF url("@/assets/inIcon2.png") no-repeat right 10px center / 15px;
+          height: 30px;
+          border-radius: 30px;
+          cursor: pointer;
+          >.icon{
+            height: 30px;
+            >img{
+              width: 25px;
+            }
+          }
+          >.name{
+            margin-left: 10px;
+            font-weight: bold;
+          }
+        }
       }
     }
+  }
+}
+
+@media (min-width: 360px) and (max-width: 850px) {
+  .appBox{
+    >.appContent{
+      >.menuBox{
+        display: none;
+      }
+      >.floatMenu{
+        display: block;
+      }
+    }
+  }
+}
+
+
+@media (min-width: 860px){
+  .appBox{
+    >.appContent{
+      >.floatMenu{
+        display: none;
+        width: 30px;
+        height: 30px;
+      }
+      >.menuBox{
+        width: 100%;
+      }
+    }
+  }
+}
+
+.mobileMenuDrawer{
+  .ant-drawer-content-wrapper{
+    .ant-drawer-section{
+      background: #000000;
+      border-top: 1px solid #FFFFFF;
+      border-right: 1px solid #FFFFFF;
+      border-bottom: 1px solid #FFFFFF;
+      border-top-right-radius: 10px;
+      border-bottom-right-radius: 10px;
+      .ant-drawer-body{
+        padding: 0;
+      }
+    }
+  }
+}
+
+.mobileMenuBox{
+  color: #FFFFFF;
+  padding: 15px;
+  >.titleAndClose{
+    height: 30px;
+    position: relative;
+    >.title{
+      height: 30px;
+      font-weight: bold;
+      font-size: 15px;
+    }
+    >.close{
+      width: 24px;
+      height: 24px;
+      position: absolute;
+      right: 0;
+      top: 50%;
+      margin-top: -12px;
+      background: url("@/assets/closeIcon.png") no-repeat center center /24px;
+    }
+  }
+  >.wallert{
+    margin-top: 10px;
+    padding: 20px 10px 20px 50px;
+    font-weight: bold;
+    background: #FFFFFF url("@/assets/wallertIcon.png") no-repeat left 10px center / 25px;
+    border-radius: 10px;
+    color: #06060B;
+  }
+  >.menuItem{
+    margin-top: 20px;
+    height: 30px;
+    background: url("@/assets/inIcon.png") no-repeat right center / 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
   }
 }

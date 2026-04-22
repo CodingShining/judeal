@@ -1,5 +1,7 @@
 // 链接钱包
 import {message} from "antd";
+// 合约数据
+import ContractList from "@/Contract/Contract.ts";
 
 declare global {
     interface Window {
@@ -7,7 +9,16 @@ declare global {
     }
 }
 
+type ChainName = keyof typeof ContractList;
+type ContractName = keyof typeof ContractList[ChainName];
 
+const chainType = new Map<string, ChainName>([
+    ['0x33450','JuChain'],
+    ['0x38', 'BNBChain']
+]);
+
+
+// 链接钱包
 const connectWallert = async ()=> {
     const { ethereum } = window as any;
     if (!window.ethereum) {
@@ -17,17 +28,17 @@ const connectWallert = async ()=> {
 
     const currentChainId = await ethereum.request({ method: 'eth_chainId' });
 
-    // const BNB_PARAMS = {
-    //     chainId: '0x38',
-    //     chainName: 'BNB Smart Chain Mainnet',
-    //     nativeCurrency: {
-    //         name: 'BNB',
-    //         symbol: 'BNB',
-    //         decimals: 18
-    //     },
-    //     rpcUrls: ['https://bsc-dataseed.binance.org/'],
-    //     blockExplorerUrls: ['https://bscscan.com']
-    // };
+    const BNB_PARAMS = {
+        chainId: '0x38',
+        chainName: 'BNB Smart Chain Mainnet',
+        nativeCurrency: {
+            name: 'BNB',
+            symbol: 'BNB',
+            decimals: 18
+        },
+        rpcUrls: ['https://bsc-dataseed.binance.org/'],
+        blockExplorerUrls: ['https://bscscan.com']
+    };
 
     const JU_PARAMS = {
         chainId: '0x33450',
@@ -63,7 +74,7 @@ const connectWallert = async ()=> {
     if (accounts.length > 0) {
         try {
             const normalizedChainId = String(currentChainId).toLowerCase();
-            if (normalizedChainId === JU_PARAMS.chainId) {
+            if (normalizedChainId === JU_PARAMS.chainId || normalizedChainId === BNB_PARAMS.chainId) {
                 // 已经在BNB链或JU链
                 return accounts[0]
             }else{
@@ -110,4 +121,12 @@ const formatWallertAddress = (address:string) =>{
     }
 }
 
-export {connectWallert, formatWallertAddress}
+// 获取对应的合约对象
+const getContracts = async (contractName:ContractName)=>{
+    const { ethereum } = window as any;
+    const currentChainId = await ethereum.request({ method: 'eth_chainId' });
+    const chainName = chainType.get(currentChainId)!;
+    return ContractList[chainName][contractName];
+}
+
+export {connectWallert, formatWallertAddress, getContracts}
