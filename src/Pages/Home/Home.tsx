@@ -1,9 +1,9 @@
 import "./Home.scss";
 import juImg from "@/assets/juTokenIcon.png";
-import usdtImg from "@/assets/usdtTokenIcon.png"
+import usdtImg from "@/assets/usdtTokenIcon.png";
+import bnbImg from "@/assets/bnbTokenIcon.png";
 import {useEffect, useRef, useState} from "react";
 
-import {getContracts} from "@/Util/Util.ts";
 import {ethers} from "ethers";
 
 import TokenControlPage from "@/Components/TokenControl/TokenControl.tsx";
@@ -59,9 +59,44 @@ function Home() {
     const [chooseTokenType, setChooseTokenType] = useState<number>(1);
 
     // 初始化代币选项
-    const initToken = async ()=>{
-        const contracts = await getContracts("USDTToken");
-        console.log(contracts);
+    const initTokenPair = async ()=>{
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        const juTokenPairNatice:TokenInterface = {
+            name: "Ju",
+            address: "0x4d1B49B424afd7075d3c063adDf97D5575E1c7E2",
+            icon: juImg,
+            decimals: 18,
+            isNative: true
+        }
+        const juTokenPairUsdt:TokenInterface = {
+            name: "USDT",
+            address: "0xc8e19C19479a866142B42fB390F2ea1Ff082E0D2",
+            icon: usdtImg,
+            decimals: 18,
+            isNative: false
+        }
+        const bnbTokenPairNatice:TokenInterface = {
+            name: "BNB",
+            address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+            icon: bnbImg,
+            decimals: 18,
+            isNative: true
+        }
+        const bnbTokenPairUsdt:TokenInterface = {
+            name: "USDT",
+            address: "0x55d398326f99059fF775485246999027B3197955",
+            icon: usdtImg,
+            decimals: 18,
+            isNative: false
+        }
+        if(chainId == "0x33450") {
+            setSellToken(juTokenPairNatice);
+            setBuyToken(juTokenPairUsdt);
+        }
+        if(chainId == "0x38") {
+            setSellToken(bnbTokenPairNatice);
+            setBuyToken(bnbTokenPairUsdt);
+        }
     }
 
     // 选择代币
@@ -98,7 +133,7 @@ function Home() {
     }
 
     useEffect(()=>{
-
+        initTokenPair();
     },[])
 
     useEffect(()=>{

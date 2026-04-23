@@ -67,7 +67,8 @@ function App() {
     // 切换链成功后
     const changeChainInfo = ()=>{
         setShowChangeChain(false);
-        getCurrChainInfo()
+        location.reload()
+        getCurrChainInfo();
     }
 
     useEffect(()=>{
