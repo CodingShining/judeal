@@ -12,7 +12,7 @@ const ContractObje = {
             "address": "0xc8e19C19479a866142B42fB390F2ea1Ff082E0D2",
             "abi": Erc20ABI
         },
-        WJuToken: {
+        Nativetoken: {
             "address": "0x4d1B49B424afd7075d3c063adDf97D5575E1c7E2",
             "abi": Erc20ABI
         },
@@ -31,7 +31,7 @@ const ContractObje = {
             "address": "0x55d398326f99059fF775485246999027B3197955",
             "abi": Erc20ABI
         },
-        WBNBToken: {
+        Nativetoken: {
             "address": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
             "abi": Erc20ABI
         },

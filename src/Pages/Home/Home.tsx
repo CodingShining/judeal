@@ -6,6 +6,8 @@ import {useEffect, useRef, useState} from "react";
 import {getContracts} from "@/Util/Util.ts";
 import {ethers} from "ethers";
 
+import TokenControlPage from "@/Components/TokenControl/TokenControl.tsx";
+
 interface TokenInterface {
     name: string,
     address: string,
@@ -51,11 +53,30 @@ function Home() {
     const sellRefTime =  useRef<NodeJS.Timeout | null>(null);
     // 购买数量防抖
     const buyRefTime = useRef<NodeJS.Timeout | null>(null);
+    // 是否显示代币选择
+    const [showTokenChoose, setShowTokenChoose] = useState<boolean>(false);
+    // 选择操作代币的选项 1出售代币 2购买代币
+    const [chooseTokenType, setChooseTokenType] = useState<number>(1);
 
-    // 测试
-    const testAction = async ()=>{
+    // 初始化代币选项
+    const initToken = async ()=>{
         const contracts = await getContracts("USDTToken");
         console.log(contracts);
+    }
+
+    // 选择代币
+    const chooseTokenAction = (index:number)=>{
+        setChooseTokenType(index);
+        setShowTokenChoose(true);
+    }
+
+    // 确定代币执行函数
+    const confirmChooseTokenAction = (Token:TokenInterface)=>{
+        if(chooseTokenType == 1) {
+            setSellToken(Token);
+        }else{
+            setBuyToken(Token);
+        }
     }
 
     // 获取输入出售值
@@ -75,6 +96,10 @@ function Home() {
             watchBuyAmount.current = ethers.parseUnits(value,buyToken.decimals);
         }
     }
+
+    useEffect(()=>{
+
+    },[])
 
     useEffect(()=>{
         if(sellRefTime.current) {
@@ -119,21 +144,21 @@ function Home() {
                         <div className="inputItem">
                             <div className="title">Sell</div>
                             <input type="number" placeholder="请输入出售数量" value={sellAmount} onChange={(event)=>{captureSellAmount(event.target.value)}} />
-                            <div className="selectBox flexStart">
+                            <div className="selectBox flexStart" onClick={()=>{chooseTokenAction(1)}}>
                                 <div className="icon columnCenter">
-                                    <img src={juImg} alt="" />
+                                    <img src={sellToken.icon} alt="" />
                                 </div>
-                                <div className="name columnCenter">Ju</div>
+                                <div className="name columnCenter">{sellToken.name}</div>
                             </div>
                         </div>
                         <div className="inputItem">
                             <div className="title">Buy</div>
                             <input type="number" placeholder="请输入购买数量" value={buyAmount} onChange={(event)=>{captureBuyAmount(event.target.value)}} />
-                            <div className="selectBox flexStart" onClick={()=>{testAction()}}>
+                            <div className="selectBox flexStart" onClick={()=>{chooseTokenAction(2)}}>
                                 <div className="icon columnCenter">
-                                    <img src={usdtImg} alt="" />
+                                    <img src={buyToken.icon} alt="" />
                                 </div>
-                                <div className="name columnCenter">USDT</div>
+                                <div className="name columnCenter">{buyToken.name}</div>
                             </div>
                         </div>
                     </div>
@@ -151,6 +176,13 @@ function Home() {
                     <div className="confirmBut columnCenter sy_confirmBut">确定交易</div>
                 </div>
             </div>
+            {/*代币选择*/}
+            {
+                showTokenChoose ?
+                    <TokenControlPage onClose={()=>{setShowTokenChoose(false)}} onConfrim={confirmChooseTokenAction} />
+                :
+                    null
+            }
         </div>
     )
 }
