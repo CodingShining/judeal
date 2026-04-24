@@ -52,6 +52,11 @@ const connectWallert = async ()=> {
         blockExplorerUrls: ['https://testnet.juscan.io']
     };
 
+    // 监听是否切换了链
+    window.ethereum.on("chainChanged", () => {
+        window.location.reload();
+    });
+
     let accounts: string[] = [];
 
     try {

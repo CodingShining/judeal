@@ -67,7 +67,6 @@ function App() {
     // 切换链成功后
     const changeChainInfo = ()=>{
         setShowChangeChain(false);
-        location.reload()
         getCurrChainInfo();
     }
 

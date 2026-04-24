@@ -3,8 +3,11 @@ import juTokenIcon from "@/assets/juTokenIcon.png";
 import bnbTokenIcon from "@/assets/bnbTokenIcon.png";
 import usdtTokenIcon from "@/assets/usdtTokenIcon.png";
 import elseTokenIcon from "@/assets/elseTokenIcon.png";
+import ERC20ABI from "@/Contract/ABI/ERC20.json";
 import {useEffect, useState} from "react";
 import {formatWallertAddress} from "@/Util/Util.ts";
+import {ethers} from "ethers";
+import {message, Spin} from "antd";
 
 interface TokenInterface {
     name: string,
@@ -24,6 +27,12 @@ function TokenControl(Props:TokenControlProps) {
     const [currChainTokenList,setCurrChainTokenList] = useState<TokenInterface[]>([]);
     // 本地存储的token列表
     const [localTokenList, setLocalTokenList] = useState<TokenInterface[]>([]);
+    // 查询token列表
+    const [searchTokenList, setSearchTokenList] = useState<TokenInterface[]>([]);
+    // 需要查询的代币地址
+    const [tokenAddress, setTokenAddress] = useState<string>("");
+    // 加载中
+    const [isLoading, setIsLoading] = useState(false);
 
     // 获取当前链的token列表
     const getCurrChainTokenListAction = async ()=>{
@@ -99,10 +108,75 @@ function TokenControl(Props:TokenControlProps) {
         Props.onClose()
     }
 
+    // 查询代币
+    const searchTokenAction = async ()=>{
+        if(!tokenAddress) {
+            return;
+        }
+        const serachPushValue:TokenInterface[] = []
+        for(let i=0; i < currChainTokenList.length; i++) {
+            if(currChainTokenList[i].address === tokenAddress || currChainTokenList[i].name.toLowerCase() === tokenAddress.toLowerCase()){
+                serachPushValue.push(currChainTokenList[i]);
+            }
+        }
+        for(let i=0; i< localTokenList.length; i++) {
+            if(localTokenList[i].address === tokenAddress || localTokenList[i].name.toLowerCase() === tokenAddress.toLowerCase()){
+                serachPushValue.push(currChainTokenList[i]);
+            }
+        }
+        if(serachPushValue.length > 0) {
+            setSearchTokenList(serachPushValue);
+            return;
+        }
+        if(!ethers.isAddress(tokenAddress)){
+            message.warning("请输入正确的代币合约地址");
+            return;
+        }
+        setIsLoading(true);
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, provider);
+        const Result = await Promise.allSettled([
+            tokenContract.decimals(),
+            tokenContract.symbol()
+        ]);
+        const searchResult:TokenInterface = {
+            address: tokenAddress,
+            name: "",
+            icon: elseTokenIcon,
+            decimals: 18,
+            isNative: false
+        }
+        if(Result[0].status === "fulfilled") {
+            searchResult.decimals = Number(Result[0].value.toString());
+        }
+        if(Result[1].status === "fulfilled") {
+            searchResult.name = Result[1].value;
+        }
+        if(searchResult.name) {
+            setSearchTokenList([searchResult]);
+            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+            const localStoreName = "TokenList" + chainId;
+            const localList = localStorage.getItem(localStoreName);
+            let list:TokenInterface[] = [];
+            if(localList) {
+                list = JSON.parse(localList);
+            }
+            list.push(searchResult);
+            localStorage.setItem(localStoreName, JSON.stringify(list));
+        }
+        setIsLoading(false);
+    }
+
     useEffect(() => {
         getCurrChainTokenListAction();
         getLocalTokenListAction();
     }, []);
+
+    useEffect(() => {
+        if(!tokenAddress) {
+            setSearchTokenList([]);
+        }
+    }, [tokenAddress]);
 
     return (
         <div className="tokenControlBox columnCenter">
@@ -114,42 +188,66 @@ function TokenControl(Props:TokenControlProps) {
                     </div>
                     <div className="inputBox">
                         <div className="input">
-                            <input type="text" placeholder="请输入代币地址" />
+                            <input type="text" placeholder="请输入代币地址" value={tokenAddress} onChange={(event)=>{setTokenAddress(event.target.value)}} />
                         </div>
-                        <div className="searchBut columnCenter">搜索/添加</div>
+                        {
+                            isLoading ?
+                                <div className="searchBut columnCenter"><Spin /></div>
+                            :
+                                <div className="searchBut columnCenter" onClick={()=>{searchTokenAction()}}>搜索/添加</div>
+                        }
                     </div>
                     <div className="scrollBox">
                         {
-                            currChainTokenList.map((item:TokenInterface,index:number)=>{
-                                return (
-                                    <div className="tokenItem flexStart" key={index}>
-                                        <div className="icon columnCenter">
-                                            <img src={item.icon} alt="" />
+                            searchTokenList.length == 0 ?
+                                currChainTokenList.map((item:TokenInterface,index:number)=>{
+                                    return (
+                                        <div className="tokenItem flexStart" key={index}>
+                                            <div className="icon columnCenter">
+                                                <img src={item.icon} alt="" />
+                                            </div>
+                                            <div className="nameAndAddress">
+                                                <div className="name">{item.name}</div>
+                                                <div className="address"><span>{formatWallertAddress(item.address)}</span></div>
+                                            </div>
+                                            <div className="chooseItem" onClick={()=>{confirmChooseTokenAction(item)}}></div>
                                         </div>
-                                        <div className="nameAndAddress">
-                                            <div className="name">{item.name}</div>
-                                            <div className="address"><span>{formatWallertAddress(item.address)}</span></div>
+                                    )
+                                })
+                            :
+                                searchTokenList.map((item:TokenInterface,index:number)=>{
+                                    return (
+                                        <div className="tokenItem flexStart" key={index}>
+                                            <div className="icon columnCenter">
+                                                <img src={item.icon} alt="" />
+                                            </div>
+                                            <div className="nameAndAddress">
+                                                <div className="name">{item.name}</div>
+                                                <div className="address"><span>{formatWallertAddress(item.address)}</span></div>
+                                            </div>
+                                            <div className="chooseItem" onClick={()=>{confirmChooseTokenAction(item)}}></div>
                                         </div>
-                                        <div className="chooseItem" onClick={()=>{confirmChooseTokenAction(item)}}></div>
-                                    </div>
-                                )
-                            })
+                                    )
+                                })
                         }
                         {
-                            localTokenList.map((item:TokenInterface,index:number)=>{
-                                return (
-                                    <div className="tokenItem flexStart" key={index}>
-                                        <div className="icon columnCenter">
-                                            <img src={elseTokenIcon} alt="" />
+                            searchTokenList.length == 0 ?
+                                localTokenList.map((item:TokenInterface,index:number)=>{
+                                    return (
+                                        <div className="tokenItem flexStart" key={index}>
+                                            <div className="icon columnCenter">
+                                                <img src={elseTokenIcon} alt="" />
+                                            </div>
+                                            <div className="nameAndAddress">
+                                                <div className="name">{item.name}</div>
+                                                <div className="address"><span>{formatWallertAddress(item.address)}</span></div>
+                                            </div>
+                                            <div className="chooseItem" onClick={()=>{confirmChooseTokenAction(item)}}></div>
                                         </div>
-                                        <div className="nameAndAddress">
-                                            <div className="name">{item.name}</div>
-                                            <div className="address"><span>{formatWallertAddress(item.address)}</span></div>
-                                        </div>
-                                        <div className="chooseItem" onClick={()=>{confirmChooseTokenAction(item)}}></div>
-                                    </div>
-                                )
-                            })
+                                    )
+                                })
+                            :
+                                null
                         }
                     </div>
                 </div>
