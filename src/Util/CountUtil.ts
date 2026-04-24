@@ -17,12 +17,11 @@ const conversV2Amount = async (amount: bigint,tokenA:TokenInterface,tokenB:Token
     const provider = new ethers.BrowserProvider(window.ethereum);
     const routerV2Contract = new ethers.Contract(routerContractInfo.address, routerContractInfo.abi, provider);
     if(isSell) {
-        const path1 = [tokenA, tokenB];
-        const path2 = [tokenA, nativeToken.address, tokenB];
-        let result;
+        const path1 = [tokenA.address, tokenB.address];
+        const path2 = [tokenA.address, nativeToken.address, tokenB.address];
         const AmountResult = await Promise.allSettled([
-            routerV2Contract.getAmountsOut(ethers.parseUnits(amount,tokenA.decimals), path1),
-            routerV2Contract.getAmountsOut(ethers.parseUnits(amount,tokenA.decimals), path2),
+            routerV2Contract.getAmountsOut(amount, path1),
+            routerV2Contract.getAmountsOut(amount, path2),
         ]);
         if(AmountResult[0].status === "fulfilled") {
             console.log(AmountResult[0].value);
