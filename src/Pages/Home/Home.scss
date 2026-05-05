@@ -17,9 +17,7 @@
       border-radius: 20px;
       >.inputOutBox{
         position: relative;
-        &::after{
-          content: "";
-          display: inline-block;
+        >.exchangeTokenBut{
           width: 40px;
           height: 40px;
           cursor: pointer;
@@ -49,6 +47,9 @@
             height: 40px;
             font-size: 15px;
             color: #FFFFFF;
+          }
+          >.balance{
+            color: rgba(255,255,255,0.4);
           }
           >.selectBox{
             padding: 0 20px;

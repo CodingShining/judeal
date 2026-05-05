@@ -1,12 +1,13 @@
 import "./Home.scss";
-import juImg from "@/assets/juTokenIcon.png";
-import usdtImg from "@/assets/usdtTokenIcon.png";
-import bnbImg from "@/assets/bnbTokenIcon.png";
+import ChainConfig from "@/ChainConfig/config.ts";
 import {useEffect, useRef, useState} from "react";
-
+import USDTTokenIcon from "@/assets/usdtTokenIcon.png";
 import {ethers} from "ethers";
+import ERC20 from "@/Contract/ABI/ERC20.json";
 
 import TokenControlPage from "@/Components/TokenControl/TokenControl.tsx";
+import SlippageControl from "@/Components/SlippageControl/SlippageControl.tsx";
+import {conversV2Info} from "@/Util/CountUtil.ts";
 
 interface TokenInterface {
     name: string,
@@ -18,7 +19,7 @@ interface TokenInterface {
 
 function Home() {
     // 出售代币
-    const [sellToken, setSellToken] = useState<TokenInterface>({
+    const [inToken, setinToken] = useState<TokenInterface>({
         name: "Ju",
         address: "",
         icon: "",
@@ -26,7 +27,7 @@ function Home() {
         isNative: true
     })
     // 购买代币
-    const [buyToken, setBuyToken] = useState<TokenInterface>({
+    const [outToken, setoutToken] = useState<TokenInterface>({
         name: "USDT",
         address: "",
         icon: "",
@@ -34,19 +35,24 @@ function Home() {
         isNative: false
     })
     // 出售代币数量
-    const [sellAmount, setSellAmount] = useState<string>("");
+    const [inTokenAmount, setInTokenAmount] = useState<string>("");
     // 购买代币数量
-    const [buyAmount, setBuyAmount] = useState<string>("");
+    const [outTokenAmount, setOutTokenAmount] = useState<string>("");
     // 过渡出售代币数量
-    const [transitionSellAmount, setTransitionSellAmount] = useState<string>("");
+    const [transitionInTokenAmount, setTransitionInTokenAmount] = useState<string>("");
     // 过渡购买代币数量
-    const [transitionBuyAmount, setTransitionBuyAmount] = useState<string>("");
+    const [transitionOutTokenAmount, setTransitionOutTokenAmount] = useState<string>("");
     // 监听购买数量
-    const watchSellAmount = useRef<bigint>(0n);
+    const watchInTokenAmount = useRef<bigint>(0n);
     // 监听出售数量
-    const watchBuyAmount = useRef<bigint>(0n);
+    const watchOutAmount = useRef<bigint>(0n);
+    // 余额
+    const [inTokenBalance, setInTokenBalance] = useState<string>("0");
+    const [outTokenBalance, setOutTokenBalance] = useState<string>("0");
     // 交易池子 1 v2 2 v3
     const [poolType, setPoolType] = useState<number>(1);
+    // V2路径
+    const [pathV2, setPathV2] = useState<string[]>([]);
     // 滑点上限
     const [slippage, setSlippage] = useState("0.5");
     // 出售数量防抖
@@ -55,48 +61,31 @@ function Home() {
     const buyRefTime = useRef<NodeJS.Timeout | null>(null);
     // 是否显示代币选择
     const [showTokenChoose, setShowTokenChoose] = useState<boolean>(false);
+    // 是否显示滑点设置
+    const [showSlippage, setShowSlippage] = useState<boolean>(false);
     // 选择操作代币的选项 1出售代币 2购买代币
     const [chooseTokenType, setChooseTokenType] = useState<number>(1);
 
     // 初始化代币选项
     const initTokenPair = async ()=>{
         const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-        const juTokenPairNatice:TokenInterface = {
-            name: "Ju",
-            address: "0x4d1B49B424afd7075d3c063adDf97D5575E1c7E2",
-            icon: juImg,
-            decimals: 18,
+        const chainTokenObj = ChainConfig.get(chainId)!;
+        const Nativetoken:TokenInterface = {
+            address: chainTokenObj.contract.Nativetoken.address,
+            icon: chainTokenObj.icon,
+            decimals: chainTokenObj.decimals,
+            name: chainTokenObj.nativeName ?? "",
             isNative: true
         }
-        const juTokenPairUsdt:TokenInterface = {
+        const UsdtToken:TokenInterface = {
+            address: chainTokenObj.contract.USDTToken.address,
+            icon: USDTTokenIcon,
+            decimals: chainTokenObj.decimals,
             name: "USDT",
-            address: "0xc8e19C19479a866142B42fB390F2ea1Ff082E0D2",
-            icon: usdtImg,
-            decimals: 18,
             isNative: false
         }
-        const bnbTokenPairNatice:TokenInterface = {
-            name: "BNB",
-            address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
-            icon: bnbImg,
-            decimals: 18,
-            isNative: true
-        }
-        const bnbTokenPairUsdt:TokenInterface = {
-            name: "USDT",
-            address: "0x55d398326f99059fF775485246999027B3197955",
-            icon: usdtImg,
-            decimals: 18,
-            isNative: false
-        }
-        if(chainId == "0x33450") {
-            setSellToken(juTokenPairNatice);
-            setBuyToken(juTokenPairUsdt);
-        }
-        if(chainId == "0x38") {
-            setSellToken(bnbTokenPairNatice);
-            setBuyToken(bnbTokenPairUsdt);
-        }
+        setinToken(Nativetoken);
+        setoutToken(UsdtToken);
     }
 
     // 选择代币
@@ -108,67 +97,137 @@ function Home() {
     // 确定代币执行函数
     const confirmChooseTokenAction = (Token:TokenInterface)=>{
         if(chooseTokenType == 1) {
-            setSellToken(Token);
+            setinToken(Token);
         }else{
-            setBuyToken(Token);
+            setoutToken(Token);
         }
     }
 
     // 获取输入出售值
     const captureSellAmount = (value:string)=>{
-        setSellAmount(value);
-        setTransitionSellAmount(value);
+        setInTokenAmount(value);
+        setTransitionInTokenAmount(value);
         if(value && Number(value) > 0) {
-            watchSellAmount.current = ethers.parseUnits(value,sellToken.decimals);
+            watchInTokenAmount.current = ethers.parseUnits(value,inToken.decimals);
         }
     }
 
     // 获取输入购买值
     const captureBuyAmount = (value:string)=>{
-        setBuyAmount(value);
-        setTransitionBuyAmount(value);
+        setOutTokenAmount(value);
+        setTransitionOutTokenAmount(value);
         if(value && Number(value) > 0) {
-            watchBuyAmount.current = ethers.parseUnits(value,buyToken.decimals);
+            watchOutAmount.current = ethers.parseUnits(value,outToken.decimals);
+        }
+    }
+
+    // 确定滑点
+    const confirmSlippage = (amount:string)=>{
+        setSlippage(amount);
+    }
+    
+    // 调换位置
+    const exchangeTokenPosition = ()=>{
+        const store:TokenInterface = inToken;
+        setinToken(outToken);
+        setoutToken(store);
+        setInTokenAmount("");
+        setOutTokenAmount("");
+        setTransitionInTokenAmount("");
+        setTransitionOutTokenAmount("");
+        watchInTokenAmount.current = 0n;
+        watchOutAmount.current = 0n;
+    }
+
+    const getInTokenBalance = async ()=>{
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        if(inToken.isNative) {
+            const balance = await provider.getBalance(signer.address);
+            setInTokenBalance(ethers.formatUnits(balance,inToken.decimals));
+        }else{
+            const Contract = new ethers.Contract(inToken.address, ERC20,provider);
+            const balance = await Contract.balanceOf(signer.address);
+            setInTokenBalance(ethers.formatUnits(balance,inToken.decimals));
+        }
+    }
+
+    const getOutTokenBalance = async ()=>{
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        if(outToken.isNative) {
+            const balance = await provider.getBalance(signer.address);
+            setOutTokenBalance(ethers.formatUnits(balance,outToken.decimals));
+        }else{
+            const Contract = new ethers.Contract(outToken.address, ERC20,provider);
+            const balance = await Contract.balanceOf(signer.address);
+            setOutTokenBalance(ethers.formatUnits(balance,outToken.decimals));
         }
     }
 
     useEffect(()=>{
         initTokenPair();
-    },[])
+    },[]);
+
+    useEffect(() => {
+        if(inToken.address) {
+            getInTokenBalance();
+        }
+    }, [inToken.address]);
+
+    useEffect(() => {
+        if(outToken.address) {
+            getOutTokenBalance();
+        }
+    }, [inToken.address]);
 
     useEffect(()=>{
         if(sellRefTime.current) {
             clearTimeout(sellRefTime.current);
         }
-        const countAction = ()=>{
-            if(transitionSellAmount && Number(transitionSellAmount) > 0) {
-
+        const countAction = async ()=>{
+            if(transitionInTokenAmount && Number(transitionInTokenAmount) > 0) {
+                if(poolType == 1) {
+                    const conversioninfo = await conversV2Info(watchInTokenAmount.current,inToken,outToken,true);
+                    if(conversioninfo) {
+                        watchOutAmount.current = conversioninfo.amount;
+                        setOutTokenAmount(ethers.formatUnits(conversioninfo.amount, outToken.decimals));
+                        setPathV2(conversioninfo.path);
+                    }
+                }
             }else{
-                setBuyAmount("");
-                watchBuyAmount.current = 0n;
+                setOutTokenAmount("");
+                watchOutAmount.current = 0n;
             }
         }
         sellRefTime.current = setTimeout(()=>{
             countAction();
-        },800);
-    },[transitionSellAmount,sellToken.name,buyToken.name])
+        },500);
+    },[transitionInTokenAmount,inToken.name,outToken.name])
 
     useEffect(()=>{
         if(buyRefTime.current) {
             clearTimeout(buyRefTime.current);
         }
-        const countAction = ()=>{
-            if(transitionBuyAmount && Number(transitionBuyAmount) > 0) {
-
+        const countAction = async ()=>{
+            if(transitionOutTokenAmount && Number(transitionOutTokenAmount) > 0) {
+                if(poolType === 1) {
+                    const conversioninfo = await conversV2Info(watchOutAmount.current,inToken,outToken,false);
+                    if(conversioninfo) {
+                        watchInTokenAmount.current = conversioninfo.amount;
+                        setInTokenAmount(ethers.formatUnits(conversioninfo.amount, outToken.decimals));
+                        setPathV2(conversioninfo.path);
+                    }
+                }
             }else{
-                setSellAmount("");
-                watchSellAmount.current = 0n;
+                setInTokenAmount("");
+                watchInTokenAmount.current = 0n;
             }
         }
         buyRefTime.current = setTimeout(()=>{
             countAction();
-        },800);
-    },[transitionBuyAmount,sellToken.name,buyToken.name])
+        },500);
+    },[transitionOutTokenAmount,inToken.name,outToken.name])
 
     return (
         <div className="homePgae columnCenter">
@@ -178,24 +237,27 @@ function Home() {
                     <div className="inputOutBox">
                         <div className="inputItem">
                             <div className="title">Sell</div>
-                            <input type="number" placeholder="请输入出售数量" value={sellAmount} onChange={(event)=>{captureSellAmount(event.target.value)}} />
+                            <input type="number" placeholder="请输入出售数量" value={inTokenAmount} onChange={(event)=>{captureSellAmount(event.target.value)}} />
+                            <div className="balance">余额：{inTokenBalance} {inToken.name}</div>
                             <div className="selectBox flexStart" onClick={()=>{chooseTokenAction(1)}}>
                                 <div className="icon columnCenter">
-                                    <img src={sellToken.icon} alt="" />
+                                    <img src={inToken.icon} alt="" />
                                 </div>
-                                <div className="name columnCenter">{sellToken.name}</div>
+                                <div className="name columnCenter">{inToken.name}</div>
                             </div>
                         </div>
                         <div className="inputItem">
                             <div className="title">Buy</div>
-                            <input type="number" placeholder="请输入购买数量" value={buyAmount} onChange={(event)=>{captureBuyAmount(event.target.value)}} />
+                            <input type="number" placeholder="请输入购买数量" value={outTokenAmount} onChange={(event)=>{captureBuyAmount(event.target.value)}} />
+                            <div className="balance">余额：{outTokenBalance} {outToken.name}</div>
                             <div className="selectBox flexStart" onClick={()=>{chooseTokenAction(2)}}>
                                 <div className="icon columnCenter">
-                                    <img src={buyToken.icon} alt="" />
+                                    <img src={outToken.icon} alt="" />
                                 </div>
-                                <div className="name columnCenter">{buyToken.name}</div>
+                                <div className="name columnCenter">{outToken.name}</div>
                             </div>
                         </div>
+                        <div className="exchangeTokenBut" onClick={()=>{exchangeTokenPosition()}}></div>
                     </div>
                     <div className="label flexBetween">
                         <div className="name columnCenter">交易池</div>
@@ -206,7 +268,7 @@ function Home() {
                     </div>
                     <div className="label flexBetween">
                         <div className="name columnCenter">滑点上限</div>
-                        <div className="value columnCenter">{slippage}%</div>
+                        <div className="value columnCenter" onClick={()=>{setShowSlippage(true)}}>{slippage}%</div>
                     </div>
                     <div className="confirmBut columnCenter sy_confirmBut">确定交易</div>
                 </div>
@@ -215,6 +277,13 @@ function Home() {
             {
                 showTokenChoose ?
                     <TokenControlPage onClose={()=>{setShowTokenChoose(false)}} onConfrim={confirmChooseTokenAction} />
+                :
+                    null
+            }
+            {/*滑点上限设置*/}
+            {
+                showSlippage ?
+                    <SlippageControl seetIngAction={confirmSlippage} onClose={()=>{setShowSlippage(false)}} />
                 :
                     null
             }

@@ -6,18 +6,13 @@ import { Dropdown, Space } from 'antd';
 
 import logoImg from "@/assets/logo.png";
 import juChainIcon from "@/assets/juTokenIcon.png";
-import bnbChainIcon from "@/assets/bnbTokenIcon.png";
 
 import RouterView from "@/Router/Router.tsx";
 import ChainControlPage from "@/Components/ChainControl/ChainControl.tsx";
 import {useEffect, useState} from "react";
 import {connectWallert, formatWallertAddress} from "@/Util/Util.ts";
+import ChainConfig from "@/ChainConfig/config.ts";
 
-// 链列表
-const chainTypeList = new Map([
-    ["0x33450", {name: "JuChain", icon: juChainIcon}],
-    ["0x38", {name: "BNBChain", icon: bnbChainIcon}]
-])
 
 function App() {
     // 菜单选项
@@ -34,7 +29,7 @@ function App() {
     const [chainImg, setChainImg] = useState<string>(juChainIcon);
 
     // 链信息名称
-    const [chainName, setChainName] = useState<string>("JuChain");
+    const [chainName, setChainName] = useState<string>("");
 
     // 是否显示链切换
     const [showChangeChain, setShowChangeChain] = useState(false);
@@ -57,7 +52,7 @@ function App() {
     // 获取当前链
     const getCurrChainInfo = async ()=>{
         const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-        const chainInfo = chainTypeList.get(chainId)!;
+        const chainInfo = ChainConfig.get(chainId)!;
         if(chainInfo) {
             setChainImg(chainInfo.icon);
             setChainName(chainInfo.name);
