@@ -10,6 +10,12 @@ interface TokenInterface {
 }
 
 const conversV2Info = async (amount: bigint,tokenA:TokenInterface,tokenB:TokenInterface,isSell:boolean)=>{
+    if((tokenA.isNative || tokenB.isNative) && (tokenA.address == tokenB.address)) {
+        return {
+            path: [tokenA.address, tokenB.address],
+            amount: amount
+        }
+    }
     const nativeToken = await getContracts("Nativetoken");
     const routerContractInfo = await getContracts("RouterV2");
     const provider = new ethers.BrowserProvider(window.ethereum);

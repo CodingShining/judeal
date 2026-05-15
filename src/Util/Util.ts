@@ -28,17 +28,17 @@ const connectWallert = async ()=> {
 
     const currentChainId = await ethereum.request({ method: 'eth_chainId' });
 
-    const BNB_PARAMS = {
-        chainId: '0x38',
-        chainName: 'BNB Smart Chain Mainnet',
-        nativeCurrency: {
-            name: 'BNB',
-            symbol: 'BNB',
-            decimals: 18
-        },
-        rpcUrls: ['https://bsc-dataseed.binance.org/'],
-        blockExplorerUrls: ['https://bscscan.com']
-    };
+    // const BNB_PARAMS = {
+    //     chainId: '0x38',
+    //     chainName: 'BNB Smart Chain Mainnet',
+    //     nativeCurrency: {
+    //         name: 'BNB',
+    //         symbol: 'BNB',
+    //         decimals: 18
+    //     },
+    //     rpcUrls: ['https://bsc-dataseed.binance.org/'],
+    //     blockExplorerUrls: ['https://bscscan.com']
+    // };
 
     const JU_PARAMS = {
         chainId: '0x33450',
@@ -71,9 +71,15 @@ const connectWallert = async ()=> {
         }
     }
     if (accounts.length > 0) {
+        // 监听是否切换了钱包
+        window.ethereum.on("accountsChanged", (changeWallert:any) => {
+            if(changeWallert[0] != accounts[0]) {
+                window.location.reload();
+            }
+        });
         try {
             const normalizedChainId = String(currentChainId).toLowerCase();
-            if (normalizedChainId === JU_PARAMS.chainId || normalizedChainId === BNB_PARAMS.chainId) {
+            if (normalizedChainId === JU_PARAMS.chainId) {
                 // 已经在BNB链或JU链
                 return accounts[0]
             }else{

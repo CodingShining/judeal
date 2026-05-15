@@ -1,35 +1,36 @@
 import './App.css'
 
-import { DownOutlined } from '@ant-design/icons';
-import {Drawer, type MenuProps} from 'antd';
-import { Dropdown, Space } from 'antd';
+// import { DownOutlined } from '@ant-design/icons';
+// import {Drawer, type MenuProps} from 'antd';
+import {Drawer} from 'antd';
+// import { Dropdown, Space } from 'antd';
 
 import logoImg from "@/assets/logo.png";
-import juChainIcon from "@/assets/juTokenIcon.png";
+// import juChainIcon from "@/assets/juTokenIcon.png";
 
 import RouterView from "@/Router/Router.tsx";
 import ChainControlPage from "@/Components/ChainControl/ChainControl.tsx";
 import {useEffect, useState} from "react";
 import {connectWallert, formatWallertAddress} from "@/Util/Util.ts";
-import ChainConfig from "@/ChainConfig/config.ts";
+// import ChainConfig from "@/ChainConfig/config.ts";
 
 
 function App() {
     // 菜单选项
-    const tradeItems:MenuProps['items'] = [
-        {key: '1',label: (<div className="menuItem">兑换</div>)},
-        {key: '2',label: (<div className="menuItem">购买加密货币</div>)}
-    ]
-    const floatItems:MenuProps['items'] = [
-        {key: '1',label: (<div className="menuItem">添加流动性</div>)},
-        {key: '2',label: (<div className="menuItem">移除流动性</div>)}
-    ]
+    // const tradeItems:MenuProps['items'] = [
+    //     {key: '1',label: (<div className="menuItem">兑换</div>)},
+    //     {key: '2',label: (<div className="menuItem">购买加密货币</div>)}
+    // ]
+    // const floatItems:MenuProps['items'] = [
+    //     {key: '1',label: (<div className="menuItem">添加流动性</div>)},
+    //     {key: '2',label: (<div className="menuItem">移除流动性</div>)}
+    // ]
 
     // 链信息图片
-    const [chainImg, setChainImg] = useState<string>(juChainIcon);
+    // const [chainImg, setChainImg] = useState<string>(juChainIcon);
 
     // 链信息名称
-    const [chainName, setChainName] = useState<string>("");
+    // const [chainName, setChainName] = useState<string>("");
 
     // 是否显示链切换
     const [showChangeChain, setShowChangeChain] = useState(false);
@@ -50,25 +51,25 @@ function App() {
     }
 
     // 获取当前链
-    const getCurrChainInfo = async ()=>{
-        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-        const chainInfo = ChainConfig.get(chainId)!;
-        if(chainInfo) {
-            setChainImg(chainInfo.icon);
-            setChainName(chainInfo.name);
-        }
-    }
+    // const getCurrChainInfo = async ()=>{
+    //     const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+    //     const chainInfo = ChainConfig.get(chainId)!;
+    //     if(chainInfo) {
+    //         setChainImg(chainInfo.icon);
+    //         setChainName(chainInfo.name);
+    //     }
+    // }
 
     // 切换链成功后
     const changeChainInfo = ()=>{
         setShowChangeChain(false);
-        getCurrChainInfo();
+        // getCurrChainInfo();
     }
 
     useEffect(()=>{
         // 链接钱包
         connectWallertAction();
-        getCurrChainInfo();
+        // getCurrChainInfo();
     }, [])
   return (
       <div className="appBox flexCenter">
@@ -79,34 +80,34 @@ function App() {
                       <div className="logo columnCenter">
                           <img src={logoImg} alt="" />
                       </div>
-                      <div className="menu flexStart">
-                          <div className="menuItem columnCenter">
-                            <Dropdown menu={{items:tradeItems}}>
-                              <Space>
-                                  交易
-                                  <DownOutlined />
-                              </Space>
-                            </Dropdown>
-                          </div>
-                          <div className="menuItem columnCenter">
-                              <Dropdown menu={{items:floatItems}}>
-                                  <Space>
-                                      流动性
-                                      <DownOutlined />
-                                  </Space>
-                              </Dropdown>
-                          </div>
-                      </div>
+                      {/*<div className="menu flexStart">*/}
+                      {/*    <div className="menuItem columnCenter">*/}
+                      {/*      <Dropdown menu={{items:tradeItems}}>*/}
+                      {/*        <Space>*/}
+                      {/*            交易*/}
+                      {/*            <DownOutlined />*/}
+                      {/*        </Space>*/}
+                      {/*      </Dropdown>*/}
+                      {/*    </div>*/}
+                      {/*    <div className="menuItem columnCenter">*/}
+                      {/*        <Dropdown menu={{items:floatItems}}>*/}
+                      {/*            <Space>*/}
+                      {/*                流动性*/}
+                      {/*                <DownOutlined />*/}
+                      {/*            </Space>*/}
+                      {/*        </Dropdown>*/}
+                      {/*    </div>*/}
+                      {/*</div>*/}
                   </div>
                   <div className="langAndConnect flexStart">
                       <div className="lan"></div>
                       <div className="wallert columnCenter"><span className="columnCenter">{userWallert ? formatWallertAddress(userWallert) : '链接钱包'}</span></div>
-                      <div className="chainBox flexStart" onClick={()=>{setShowChangeChain(true)}}>
-                          <div className="icon columnCenter">
-                              <img src={chainImg} alt="" />
-                          </div>
-                          <div className="name columnCenter">{chainName}</div>
-                      </div>
+                      {/*<div className="chainBox flexStart" onClick={()=>{setShowChangeChain(true)}}>*/}
+                      {/*    <div className="icon columnCenter">*/}
+                      {/*        <img src={chainImg} alt="" />*/}
+                      {/*    </div>*/}
+                      {/*    <div className="name columnCenter">{chainName}</div>*/}
+                      {/*</div>*/}
                   </div>
               </div>
               <RouterView />
